@@ -8,6 +8,8 @@ import thread
 import socket
 import csv
 import gpxpy
+import json
+import hashlib
 
 ADDR = ('geoloc.dev.api.taxi', 80)
 
@@ -18,13 +20,14 @@ def animate(taxi_, gpx, udpsock, addr, delay):
         for segment in trace.segments:
             for point in segment.points:
                 unix_timestamp = int(time.time())
-                data = ('{{"timestamp":{},"operator":"{}","version":"{}",'
-                        '"lat":"{}","lon":"{}","device":"{}","status":"{}", "taxi":"{}",'
-                        '"hash":"2fd4e1c67a2d28fced849ee1bb76e7391b93eb12"}}'
-                       ).format(unix_timestamp, taxi_['operator'], taxi_['version'], \
-                               point.latitude, point.longitude, \
-                               taxi_['device'], taxi_['status'], taxi_['taxi'])
-                udpsock.sendto(data, addr)
+                payload={"timestamp":unix_timestamp, "operator": taxi_['operator'],
+                         "version": taxi_['version'], "lat": point.latitude,
+                         "lon": point.longitude, "device": taxi_['device']}
+                concat = "".join(map(lambda k: payload[k], ['timestamp', 'operator',
+				'taxi', 'lat', 'lon', 'device', 'status', 'version']))
+                concat += taxi_['apikey']
+                data['hash'] = str(hashlib.sha1(concat).hexdigest())
+                udpsock.sendto(json.dumps(data), addr)
                 time.sleep(delay)
         time.sleep(10*delay)
 
@@ -41,7 +44,7 @@ def main(argv):
         for row in taxisreader:
             if row:
                 taxis.append({'operator': row[0], 'version': row[1], \
-                        'taxi': row[2], 'status': row[5], 'device': row[6]})
+                        'taxi': row[2], 'status': row[5], 'device': row[6], 'apikey':row[8]})
 
     with open(gpxfile, 'r') as gpx_file:
         gpx = gpxpy.parse(gpx_file)
