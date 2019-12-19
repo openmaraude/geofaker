@@ -32,7 +32,10 @@ class Geotaxi:
         self.addr = (host, port)
 
     def send(self, data):
-        r = self.sock.sendto(data, self.addr)
+        try:
+            r = self.sock.sendto(data, self.addr)
+        except socket.error as exc:
+            logger.error('Unable to send position to geotaxi: %s', exc)
 
 
 async def move_taxi(taxi, gpx, geotaxi):
