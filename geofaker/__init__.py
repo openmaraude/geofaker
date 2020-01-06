@@ -19,8 +19,6 @@ import time
 import gpxpy
 
 
-MOVE_DELAY = 5
-
 logger = logging.getLogger(__name__)
 
 
@@ -38,7 +36,7 @@ class Geotaxi:
             logger.error('Unable to send position to geotaxi: %s', exc)
 
 
-async def move_taxi(taxi, gpx, geotaxi):
+async def move_taxi(taxi, gpx, geotaxi, wait_time):
     while True:
         # Follow random track
         trace = gpx.tracks[random.randrange(0, len(gpx.tracks))]
@@ -72,17 +70,17 @@ async def move_taxi(taxi, gpx, geotaxi):
                 )
                 geotaxi.send(data.encode('utf8'))
 
-                await asyncio.sleep(MOVE_DELAY)
+                await asyncio.sleep(wait_time)
 
         logger.debug('taxi %s: track finished, start new track', taxi['taxi'])
-        await asyncio.sleep(10 * MOVE_DELAY)
+        await asyncio.sleep(10 * wait_time)
 
 
-async def animate(taxis, gpx, geotaxi):
+async def animate(taxis, gpx, geotaxi, wait_time):
     """Update `geotaxi` with `taxis` positions following tracks defined in `gpx`.
     """
     await asyncio.gather(
-        *(move_taxi(taxi, gpx, geotaxi) for taxi in taxis)
+        *(move_taxi(taxi, gpx, geotaxi, wait_time) for taxi in taxis)
     )
 
 
@@ -116,6 +114,7 @@ def main():
     parser.add_argument('tracks_file', help='tracks.gpx file')
     parser.add_argument('--geotaxi-addr', required=True)
     parser.add_argument('--geotaxi-port', default=8080, type=int)
+    parser.add_argument('--wait', '-w', default=5, type=float, help='Wait time before sending position')
     args = parser.parse_args()
 
     geotaxi = Geotaxi(args.geotaxi_addr, args.geotaxi_port)
@@ -123,7 +122,7 @@ def main():
     taxis = parse_taxis_file(args.taxis_file)
     gpx = parse_gpx_file(args.tracks_file)
 
-    asyncio.run(animate(taxis, gpx, geotaxi))
+    asyncio.run(animate(taxis, gpx, geotaxi, args.wait))
 
 
 if __name__ == '__main__':
