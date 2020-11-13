@@ -1,14 +1,21 @@
-Dummy script to animate dummy taxis
-===================================
+# geofaker
 
-Usage: geofaker.py taxis.csv tracks.gpx
+Geofaker is a simple script which takes two parameters:
+
+* a .csv file listing taxis, with the columns `operator, api_version, taxi_id, lat, lon, status, device, hash, operator_api_key`.
+* a [.gpx file](https://en.wikipedia.org/wiki/GPS_Exchange_Format) to describe routes.
+
+Then it moves taxis following routes.
 
 
-* taxis.csv header:
+## Note
 
-   `operator, api_version, taxi_id, lat, lon, status, device, hash, operator_api_key`
+This script is only used with [APITaxi_devel](https://github.com/openmaraude/APITaxi_devel) and on the development platform [dev.api.taxi](https://dev.api.taxi).
 
-   _(lat & lon are unused but allow to use the same csv config file as the static faker)_
+It is probably useless, and we should consider removing this component completely.
+
+
+## Contributions
 
 * paris-small.gpx:
 
