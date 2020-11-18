@@ -24,8 +24,6 @@ workflows:
   artifacts:
     jobs:
       - build:
-          requires:
-            - test
           filters:
             branches:
               ignore: /.*/
